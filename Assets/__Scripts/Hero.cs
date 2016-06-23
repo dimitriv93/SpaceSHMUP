@@ -13,6 +13,7 @@ public class Hero : MonoBehaviour {
 
 	public bool	_____________________;
 	public Bounds bounds;
+	public float gameRestartDelay = 2f;
 
 	void Awake(){
 		S = this;
@@ -20,10 +21,6 @@ public class Hero : MonoBehaviour {
 	}
 
 
-	// Use this for initialization
-	void Start () {
-	
-	}
 	
 	// Update is called once per frame
 	void Update () {
@@ -86,6 +83,8 @@ public class Hero : MonoBehaviour {
 			// If the shield is going to be set to less than zero
 			if (value < 0) { // 3
 				Destroy(this.gameObject);
+				// Tell Main.S to restart the game after a delay
+				Main.S.DelayedRestart( gameRestartDelay );
 			}
 		}
 	}
