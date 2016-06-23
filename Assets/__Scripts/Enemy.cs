@@ -18,6 +18,7 @@ public class Enemy : MonoBehaviour {
 		InvokeRepeating( "CheckOffscreen", 0f, 2f );
 	}
 
+
 	public virtual void Move() {
 		Vector3 tempPos = pos;
 		tempPos.y -= speed * Time.deltaTime;

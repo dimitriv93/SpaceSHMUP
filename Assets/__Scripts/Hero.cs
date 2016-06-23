@@ -9,7 +9,7 @@ public class Hero : MonoBehaviour {
 	public float	rollMult = -45;
 	public float  	pitchMult=30;
 
-	public float	shieldLevel=1;
+	private float _shieldLevel = 1; // Add the underscore!
 
 	public bool	_____________________;
 	public Bounds bounds;
@@ -47,6 +47,8 @@ public class Hero : MonoBehaviour {
 		// rotate the ship to make it feel more dynamic
 		transform.rotation =Quaternion.Euler(yAxis*pitchMult, xAxis*rollMult,0);
 	}
+	// This variable holds a reference to the last triggering GameObject
+	public GameObject lastTriggerGo = null;
 
 	void OnTriggerEnter(Collider other) {
 		// Find the tag of other.gameObject or its parent GameObjects
@@ -54,10 +56,38 @@ public class Hero : MonoBehaviour {
 		// If there is a parent with a tag
 		if (go != null) {
 			// Announce it
+
+			// Make sure it's not the same triggering go as last time
+			if (go == lastTriggerGo) { // 2
+				return;
+			}
+			lastTriggerGo = go; // 3
+			if (go.tag == "Enemy") {
+				// If the shield was triggered by an enemy
+				// Decrease the level of the shield by 1
+				shieldLevel--;
+				// Destroy the enemy
+				Destroy(go); // 4
+			} else {
 			print("Triggered: "+go.name);
+		}
 		} else {
 			// Otherwise announce the original other.gameObject
 			print("Triggered: "+other.gameObject.name); // Move this line here!
 		}
 	}
+
+	public float shieldLevel {
+		get {
+			return( _shieldLevel ); // 1
+		}
+		set {
+			_shieldLevel = Mathf.Min( value, 4 ); // 2
+			// If the shield is going to be set to less than zero
+			if (value < 0) { // 3
+				Destroy(this.gameObject);
+			}
+		}
+	}
+
 }
