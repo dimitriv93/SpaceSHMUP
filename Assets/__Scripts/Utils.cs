@@ -48,148 +48,129 @@ public class Utils : MonoBehaviour
 	}
 
 
-// PRIVATE VARIABLE
-	static private Bounds _camBounds;
-
-//PROPERTY
-	static public Bounds camBounds {
+	// Make a static read-only public property camBounds
+	static public Bounds camBounds { // 1
 		get {
+			// if _camBounds hasn't been set yet
 			if (_camBounds.size == Vector3.zero) {
+				// SetCameraBounds using the default Camera
 				SetCameraBounds();
 			}
-			return (_camBounds);
-		} // end of get
+			return( _camBounds );
+		}
 	}
-	
-	//function used by camBound property and also may be called directly
-	
-	public static void SetCameraBounds(Camera cam=null) {
-		// use the main camera as default if none passed in.
-		if (cam == null)
-			cam = Camera.main;
-			
-		// assuming camera is orthographic and does not have any rotation applied to it	
-		// get top left and bottomRight
-		
-			Vector3 topLeft = new Vector3(0,0,0);
-			Vector3 bottomRight = new Vector3(Screen.width, Screen.height, 0f);
-			
-			Vector3 boundTLN = cam.ScreenToWorldPoint(topLeft);
-			Vector3	boundBRF = cam.ScreenToWorldPoint(bottomRight);	
-			
-			boundTLN.z = cam.nearClipPlane;
-			boundBRF.z = cam.farClipPlane;
-			
-			Vector3 center = (boundTLN + boundBRF) /2f;
-			
-			_camBounds = new Bounds(center, Vector3.zero);
-			_camBounds.Encapsulate(boundTLN);
-			_camBounds.Encapsulate(boundBRF);
-	} // end setCameraBounds
+	// This is the private static field that camBounds uses
+	static private Bounds _camBounds; // 2
+	// This function is used by camBounds to set _camBounds and can also be
+	// called directly.
+	public static void SetCameraBounds(Camera cam=null) { // 3
+		// If no Camera was passed in, use the main Camera
+		if (cam == null) cam = Camera.main;
+		// This makes a couple of important assumptions about the camera!:
+		// 1. The camera is Orthographic
+		// 2. The camera is at a rotation of R:[0,0,0]
+		// Make Vector3s at the topLeft and bottomRight of the Screen coords
+		Vector3 topLeft = new Vector3( 0, 0, 0 );
+		Vector3 bottomRight = new Vector3( Screen.width, Screen.height, 0 );
+		// Convert these to world coordinates
+		Vector3 boundTLN = cam.ScreenToWorldPoint( topLeft );
+		Vector3 boundBRF = cam.ScreenToWorldPoint( bottomRight );
+		// Adjust their zs to be at the near and far Camera clipping planes
+		boundTLN.z += cam.nearClipPlane;
+		boundBRF.z += cam.farClipPlane;
+		// Find the center of the Bounds
+		Vector3 center = (boundTLN + boundBRF)/2f;
+		_camBounds = new Bounds( center, Vector3.zero );
+		// Expand _camBounds to encapsulate the extents.
+		_camBounds.Encapsulate( boundTLN );
+		_camBounds.Encapsulate( boundBRF );
+	}
 	
 	// checks to see whether the bounds bnd are within the camBounds
 	public static Vector3 ScreenBoundsCheck (Bounds bnd, BoundsTest test = BoundsTest.center) {
 		return (BoundsInBoundsCheck( camBounds, bnd, test));
 	}
 	
-	// Checks to see if bounds lilb are within Bounds bigB
-	public static Vector3 BoundsInBoundsCheck (Bounds bigB, Bounds lilB, BoundsTest test = BoundsTest.onScreen) {
-		// behavior needs to be different depending on the test selected
-		
-		Vector3 pos = lilB.center;		// use center for measurement
-		Vector3 off = Vector3.zero;		// offset is 0,0,0 to start
-		
+	// Checks to see whether Bounds lilB are within Bounds bigB
+	public static Vector3 BoundsInBoundsCheck( Bounds bigB, Bounds lilB, BoundsTest test =
+	                                          BoundsTest.onScreen ) {
+		// The behavior of this function is different based on the BoundsTest
+		// that has been selected.
+		// Get the center of lilB
+		Vector3 pos = lilB.center;
+		// Initialize the offset at [0,0,0]
+		Vector3 off = Vector3.zero;
 		switch (test) {
-			// what is offset to move center of lilB back inside bigB
-			case BoundsTest.center:
-			// trivial case - we are already inside
-			if (bigB.Contains(pos)) {
-				return (Vector3.zero);   //no need to move
+			// The center test determines what off (offset) would have to be applied
+			// to lilB to move its center back inside bigB
+		case BoundsTest.center:
+			if ( bigB.Contains( pos ) ) {
+				return( Vector3.zero );
 			}
-			
-			//otherwise adjust x,y,z components as needed
-			if(pos.x > bigB.max.x) {
+			if (pos.x > bigB.max.x) {
 				off.x = pos.x - bigB.max.x;
 			} else if (pos.x < bigB.min.x) {
 				off.x = pos.x - bigB.min.x;
 			}
-			
-			if(pos.y > bigB.max.y) {
+			if (pos.y > bigB.max.y) {
 				off.y = pos.y - bigB.max.y;
 			} else if (pos.y < bigB.min.y) {
 				off.y = pos.y - bigB.min.y;
 			}
-			
-			if(pos.z > bigB.max.z) {
+			if (pos.z > bigB.max.z) {
 				off.z = pos.z - bigB.max.z;
 			} else if (pos.z < bigB.min.z) {
 				off.z = pos.z - bigB.min.z;
 			}
-				
-			return (off);
-
-			//-------------------------
-			// what is the offset to keep ALL of lilB inside bigB
-			case BoundsTest.onScreen:
-			// trivial case - we are already inside
-			if (bigB.Contains(lilB.max) && bigB.Contains(lilB.min)) {
-				return (Vector3.zero);   //no need to move
+			return( off );
+			// The onScreen test determines what off would have to be applied to
+			// keep all of lilB inside bigB
+		case BoundsTest.onScreen:
+			if ( bigB.Contains( lilB.min ) && bigB.Contains( lilB.max ) ) {
+				return( Vector3.zero );
 			}
-			
-			if(lilB.max.x > bigB.max.x) {
+			if (lilB.max.x > bigB.max.x) {
 				off.x = lilB.max.x - bigB.max.x;
 			} else if (lilB.min.x < bigB.min.x) {
 				off.x = lilB.min.x - bigB.min.x;
 			}
-			
-			if(lilB.max.y > bigB.max.y) {
+			if (lilB.max.y > bigB.max.y) {
 				off.y = lilB.max.y - bigB.max.y;
 			} else if (lilB.min.y < bigB.min.y) {
 				off.y = lilB.min.y - bigB.min.y;
 			}
-			
-			if(lilB.max.z > bigB.max.z) {
+			if (lilB.max.z > bigB.max.z) {
 				off.z = lilB.max.z - bigB.max.z;
 			} else if (lilB.min.z < bigB.min.z) {
 				off.z = lilB.min.z - bigB.min.z;
 			}
-			
-			return (off);
-			
-			//-------------------------
-			// what is the offset to keep ALL of lilB outside of bigB					
-			case BoundsTest.offScreen:
-			bool cMin = bigB.Contains(lilB.min);
-			bool cMax = bigB.Contains(lilB.max);
-			
-			if (cMin || cMax) {
-				return (Vector3.zero);
+			return( off );
+			// The offScreen test determines what off would need to be applied to
+			// move any tiny part of lilB inside of bigB
+		case BoundsTest.offScreen:
+			bool cMin = bigB.Contains( lilB.min );
+			bool cMax = bigB.Contains( lilB.max );
+			if ( cMin || cMax ) {
+				return( Vector3.zero );
 			}
-			
-			
-			if(lilB.min.x > bigB.max.x) {
+			if (lilB.min.x > bigB.max.x) {
 				off.x = lilB.min.x - bigB.max.x;
 			} else if (lilB.max.x < bigB.min.x) {
 				off.x = lilB.max.x - bigB.min.x;
 			}
-			
-			if(lilB.min.y > bigB.max.y) {
+			if (lilB.min.y > bigB.max.y) {
 				off.y = lilB.min.y - bigB.max.y;
 			} else if (lilB.max.y < bigB.min.y) {
 				off.y = lilB.max.y - bigB.min.y;
 			}
-			
-			if(lilB.min.z > bigB.max.z) {
+			if (lilB.min.z > bigB.max.z) {
 				off.z = lilB.min.z - bigB.max.z;
 			} else if (lilB.max.z < bigB.min.z) {
 				off.z = lilB.max.z - bigB.min.z;
 			}
-		
-			return (off);
-		} // end switch BoundsTest
-		
-		return (Vector3.zero);  // if we get here something went wrong
-	
+			return( off );
+		}
+		return( Vector3.zero );
 	} // end BoundsInBoundsCheck
 
 	// This function will iteratively climb up the transform.parent tree
