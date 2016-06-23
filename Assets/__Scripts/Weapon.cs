@@ -41,9 +41,12 @@ public class Weapon : MonoBehaviour {
 	public WeaponDefinition def;
 	public GameObject collar;
 	public float lastShot; // Time last shot was fired
+
+	void Awake() {
+		collar = transform.Find("Collar").gameObject;
+	}
 	
 	void Start() {
-		collar = transform.Find("Collar").gameObject;
 		// Call SetType() properly for the default _type
 		SetType( _type );
 		if (PROJECTILE_ANCHOR == null) {

@@ -24,11 +24,13 @@ public class Hero : MonoBehaviour {
 	void Awake(){
 		S = this;
 		bounds = Utils.CombineBoundsOfChildren (this.gameObject);
-
-		// Reset the weapons to start _Hero with 1 blaster
-		ClearWeapons();
-		weapons[0].SetType(WeaponType.blaster);
 	}
+		void Start() {
+			// Reset the weapons to start _Hero with 1 blaster
+			ClearWeapons();
+			weapons[0].SetType(WeaponType.blaster);
+		}
+	
 
 
 	
